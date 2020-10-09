@@ -1,2 +1,5 @@
-gnupg-1.4.14/
+gnupg-1.4.13/
 build/
+runner
+testfiles/
+*/visualenv/
