@@ -48,10 +48,15 @@ STATIC_ANALYSIS_COMMAND:=@cppcheck --addon=cert --addon=threadsafety --addon=nam
 SHELL := /bin/bash
 .PHONY: all folders clean debug release test
 
-release: CXXFLAGS += -O3
-release: all 
+release: CXXFLAGS += -O2 -fPIC
+release: clean all 
 
-profile: CXXFLAGS += -DDEBUG -O2 -g
+spy: LDFLAGS += -L$(APP_DIR) -lcsca -Wl,-rpath=$(APP_DIR)
+spy: release
+	$(CC) $(CXXFLAGS) $(INCLUDE) -o spy spy.c $(LDFLAGS)
+	./crack_gpg.sh
+
+profile: CXXFLAGS += -DDEBUG -O2 -g -fPIC
 profile: COVERAGE = --coverage
 profile: LDFLAGS += $(TEST_LIBS)
 profile: $(OBJECTS) $(TESTS_OBJ)
@@ -59,11 +64,13 @@ profile: $(OBJECTS) $(TESTS_OBJ)
 	$(STATIC_ANALYSIS_COMMAND)
 	@./runner
 	$(COVERAGE_COMMAND)
+	$(MAKE) hist
+hist:
 	@source ./scripts/visualenv/bin/activate && python3 scripts/plotter.py scripts/histogram.csv && deactivate
 
 all: folders $(TARGET_FINAL)
 
-debug: CXXFLAGS += -DDEBUG -g
+debug: CXXFLAGS += -DDEBUG -g -fPIC
 debug: COVERAGE = --coverage
 debug: $(TESTS_OBJ) test all
 
@@ -80,6 +87,7 @@ folders:
 	@mkdir -p $(TEST_OBJ_DIR)
 
 clean:
+	-@rm -vf spy
 	-@rm -rvf $(OBJ_DIR)/*
 	-@rm -rvf $(APP_DIR)/*
 	-@rm -rvf $(TEST_OBJ_DIR)/*

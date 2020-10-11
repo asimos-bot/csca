@@ -1,6 +1,6 @@
 #include "fr/fr.h"
 
-unsigned int probe(void* addr){
+unsigned int fr_probe(void* addr){
 
 	unsigned int time=0;
 
@@ -77,7 +77,7 @@ void load_elf(mmap_info* mi, const char* filename){
 	close(fd);
 }
 
-int default_cbk(void* addr){
+int default_cbk(FR* fr, void* addr){
 
 	printf("hit detected: %p\n", addr);
 	return 0;
@@ -85,17 +85,18 @@ int default_cbk(void* addr){
 
 void fr_monitor_raw(FR* fr){
 
+	if( !fr->cbk ) fr->cbk = default_cbk;
+
 	while(1){
 
 		for( unsigned int i=0; i < fr->len; i++ ){
 
 			force_flush( fr->addrs[i] );
 			sched_yield();
-			unsigned int time = probe(fr->addrs[i]);
-
+			unsigned int time = fr_probe(fr->addrs[i]);
 			if( fr->hit_begin <= time &&
 			    time <= fr->hit_end &&
-			    fr->cbk(fr->addrs[i]))  return;
+			    fr->cbk(fr, fr->addrs[i])) return;
 		}
 	}
 }
@@ -105,11 +106,7 @@ void fr_monitor_elf(FR* fr, const char* filename){
 	mmap_info mi = (mmap_info){ 0, NULL };
 
 	load_elf(&mi, filename);
-
 	translate_offsets(fr, mi.base_addr);
-
-	if( !fr->cbk ) fr->cbk = default_cbk;
-
 	fr_monitor_raw(fr);
 
 	munmap(mi.base_addr, mi.size);
@@ -118,13 +115,13 @@ void fr_monitor_elf(FR* fr, const char* filename){
 unsigned int force_hit(void* addr){
 
 	force_access(addr);
-	return probe(addr);
+	return fr_probe(addr);
 }
 
 unsigned int force_miss(void* addr){
 
 	force_flush(addr);
-	return probe(addr);
+	return fr_probe(addr);
 }
 
 void hit_loop(double hist[][2], unsigned int n, void* addr){

@@ -20,7 +20,10 @@ typedef struct FR {
 	// called when a hit is detected, return zero to keep monitoring addresses
 	// if none is given, the default one where a "printf" notifies a hit is used
 	// (function always return zero)
-	int (*cbk)(void* addr);
+	int (*cbk)(struct FR*, void* addr);
+
+	// data, to be accessed by the callback function if desired
+	void* data;
 
 	// timestamp to detect hit range
 	unsigned int hit_begin;
@@ -34,6 +37,7 @@ typedef struct FR {
 #define fr_init(...)\
 	(FR){\
 		.cbk = NULL,\
+		.data = NULL,\
 		.hit_begin = 0,\
 		.hit_end = 225,\
 		.len = ARRAY_SIZE( ( (void*[]){__VA_ARGS__} ) ),\

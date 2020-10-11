@@ -3,11 +3,11 @@
 
 int fr_test_calibrate() {
 
-	FR fr = fr_init(  );
+	FR fr = fr_init( (void*)0xa3e0 );
 
 	fr_calibrate(&fr, 1, 10000, "scripts/histogram.csv");
 
-	printf("hit range: (%u, %u)\n", fr.hit_begin, fr.hit_end);
+	//fr_monitor_elf(&fr, "/usr/bin/gnome-calculator");
 
 	return 0;
 }
