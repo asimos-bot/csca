@@ -23,6 +23,6 @@ The Flush+Reload and Flush+Flush attacks are
 tested by trying to recover a secret RSA key
 from GnuPG version 1.4.13.
 
-RSA square: 0x999b0 offset
-RSA division: 0x98f5b offset
-RSA multiplication: 0x99420 offset
+RSA square: 0xbb9e5 offset
+RSA reduce: 0xbaf9f offset
+RSA multiplication: 0xbb367 offset

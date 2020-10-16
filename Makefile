@@ -46,15 +46,13 @@ STATIC_ANALYSIS_COMMAND:=@cppcheck --addon=cert --addon=threadsafety --addon=nam
 	$(INCLUDE) --suppress=cert-MSC24-C --suppress=missingIncludeSystem --quiet --enable=all $(SRC) $(TESTS_SRC)
 
 SHELL := /bin/bash
-.PHONY: all folders clean debug release test
+.PHONY: all folders clean debug release test spy profile hist
 
 release: CXXFLAGS += -O2 -fPIC
-release: clean all 
+release: | clean all 
 
-spy: LDFLAGS += -L$(APP_DIR) -lcsca -Wl,-rpath=$(APP_DIR)
 spy: release
-	$(CC) $(CXXFLAGS) $(INCLUDE) -o spy spy.c $(LDFLAGS)
-	./crack_gpg.sh
+	@$(CC) $(INCLUDE) -o spy spy.c $(LDFLAGS) -L$(APP_DIR) -lcsca -Wl,-rpath=$(APP_DIR)
 
 profile: CXXFLAGS += -DDEBUG -O2 -g -fPIC
 profile: COVERAGE = --coverage
@@ -66,7 +64,7 @@ profile: $(OBJECTS) $(TESTS_OBJ)
 	$(COVERAGE_COMMAND)
 	$(MAKE) hist
 hist:
-	@source ./scripts/visualenv/bin/activate && python3 scripts/plotter.py scripts/histogram.csv && deactivate
+	@source ./scripts/visualenv/bin/activate && python3 scripts/plotter.py scripts/calibration.csv && deactivate
 
 all: folders $(TARGET_FINAL)
 
@@ -95,7 +93,7 @@ clean:
 
 $(TARGET_FINAL): $(OBJECTS)
 	@mkdir -p $(@D)
-	@$(CXX) $(CXXFLAGS) -o $(TARGET_FINAL) $^ $(LDFLAGS) -shared -fPIC
+	@$(CXX) $(CXXFLAGS) -shared -o $(TARGET_FINAL) $^ $(LDFLAGS)
 
 $(OBJECTS): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.$(SRC_FILE_EXTENSION)
 	@mkdir -p $(@D)

@@ -3,9 +3,9 @@
 
 int fr_test_calibrate() {
 
-	FR fr = fr_init( (void*)0xa3e0 );
+	FR fr = fr_init( 100000, (void*)0xa3e0 );
 
-	fr_calibrate(&fr, 1, 10000, "scripts/histogram.csv");
+	fr_calibrate(&fr, 1, 1000000, "scripts/calibration.csv");
 
 	//fr_monitor_elf(&fr, "/usr/bin/gnome-calculator");
 
@@ -14,7 +14,7 @@ int fr_test_calibrate() {
 
 int fr_test_init() {
 
-	FR fr2 = fr_init( (void*)0x1, (void*)0x1000000, (void*) 0x0a );
+	FR fr2 = fr_init( 10, (void*)0x1, (void*)0x1000000, (void*) 0x0a );
 
 	ctdd_assert(fr2.len == 3);
 	ctdd_assert(fr2.addrs[0] == (void*)0x1);

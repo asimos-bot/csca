@@ -1,10 +1,6 @@
 #!/bin/bash
 
-echo "starting spy"
-./spy &
-SPY_PID=$!
+./spy > spy.log &
+sleep 2
 
-echo "starting victim"
-echo "Test Key" | gnupg-1.4.13/g10/gpg --passphrase-fd 0 -d scripts/hello.txt.gpg 2>/dev/null 1>/dev/null
-
-wait $SPY_ID
+gnupg-1.4.13/g10/gpg --passphrase "Test Key" --armor -q -d scripts/hello.txt.gpg

@@ -5,21 +5,23 @@ unsigned int fr_probe(void* addr){
 	unsigned int time=0;
 
 	__asm__ volatile (
-		 "mfence\n"\
-		"lfence\n"\
-		"rdtsc\n"\
-		"lfence\n"\
-		"movl %%eax, %%esi\n"\
-		"movl (%1), %%eax\n"\
-		"mfence\n"\
-		"lfence\n"\
-		"rdtsc\n"\
-		"lfence\n"\
+		 "mfence\n"
+		"lfence\n"
+		"rdtsc\n"
+		"lfence\n"
+		"movl %%eax, %%esi\n"
+		"movl (%1), %%eax\n"
+		"mfence\n"
+		"lfence\n"
+		"rdtsc\n"
+		"lfence\n"
 		"subl %%esi, %%eax\n"
+		"clflush 0(%1)\n"
 		: "=a"(time)
 		: "c"(addr)
 		: "%esi", "%edi"
 	);
+
 	return time;
 }
 
@@ -77,26 +79,24 @@ void load_elf(mmap_info* mi, const char* filename){
 	close(fd);
 }
 
-int default_cbk(FR* fr, void* addr){
-
-	printf("hit detected: %p\n", addr);
-	return 0;
-}
-
 void fr_monitor_raw(FR* fr){
 
-	if( !fr->cbk ) fr->cbk = default_cbk;
+	// flush everything to avoid false hits in first round
+	for(unsigned int i=0; i < fr->len; i++) force_flush(fr->addrs[i]);
 
-	while(1){
+	for(unsigned int i=0; i < fr->res_len;){
 
-		for( unsigned int i=0; i < fr->len; i++ ){
-
-			force_flush( fr->addrs[i] );
+		for( unsigned int j=0; j < fr->len; j++ ){
+			
+			unsigned int time = fr_probe(fr->addrs[j]);
 			sched_yield();
-			unsigned int time = fr_probe(fr->addrs[i]);
-			if( fr->hit_begin <= time &&
-			    time <= fr->hit_end &&
-			    fr->cbk(fr, fr->addrs[i])) return;
+
+			if( fr->hit_begin <= time && time <= fr->hit_end && ( !i || fr->results[i-1] != j ) ){
+
+				fr->results[i] = j;
+				i++;
+				break;
+			}		
 		}
 	}
 }
@@ -127,6 +127,7 @@ unsigned int force_miss(void* addr){
 void hit_loop(double hist[][2], unsigned int n, void* addr){
 
 	for(; n > 0; n--){
+
 		unsigned int time = force_hit(addr);
 		if( time >= HIST_SIZE ) time = HIST_SIZE - 1;
 		hist[time][0]++;
@@ -235,7 +236,6 @@ void fr_calibrate(FR* fr, double sensibility, unsigned int num_samples, const ch
 	void* test_addr = malloc(1);
 
 	hit_loop(hist, num_samples/2, test_addr);
-
 	miss_loop(hist, num_samples/2, test_addr);
 
 	free(test_addr);

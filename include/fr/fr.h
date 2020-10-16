@@ -14,16 +14,12 @@
 #define HIST_SIZE 700
 
 #define ARRAY_SIZE(arr) sizeof(arr)/sizeof(arr[0])
+#define EMPTY_RESULT 0xFFFFFFFF
 
 typedef struct FR {
 
-	// called when a hit is detected, return zero to keep monitoring addresses
-	// if none is given, the default one where a "printf" notifies a hit is used
-	// (function always return zero)
-	int (*cbk)(struct FR*, void* addr);
-
-	// data, to be accessed by the callback function if desired
-	void* data;
+	unsigned int* results;
+	unsigned int res_len;
 
 	// timestamp to detect hit range
 	unsigned int hit_begin;
@@ -34,18 +30,17 @@ typedef struct FR {
 	void** addrs;
 } FR;
 
-#define fr_init(...)\
+#define fr_init(res_arr_len, ...)\
 	(FR){\
-		.cbk = NULL,\
-		.data = NULL,\
+		.results = memset( &(unsigned int[ res_arr_len ]){0}, EMPTY_RESULT, res_arr_len),\
+		.res_len = res_arr_len,\
 		.hit_begin = 0,\
-		.hit_end = 225,\
+		.hit_end = 180,\
 		.len = ARRAY_SIZE( ( (void*[]){__VA_ARGS__} ) ),\
 		.addrs = (void*[]){__VA_ARGS__}\
-	}
+	};\
 
-// monitor addresses, callback (.cbk) is called when a hit is detected
-// functions ends when a callback returns a non-zero value
+// monitor addresses, return which address was detected in the "results" matrix
 void fr_monitor_raw(FR*);
 
 // mmap an elf binary to memory and call "fr_monitor". It detects if the
