@@ -14,7 +14,6 @@
 #define HIST_SIZE 700
 
 #define ARRAY_SIZE(arr) sizeof(arr)/sizeof(arr[0])
-#define EMPTY_RESULT 0xFFFFFFFF
 
 typedef struct FR {
 
@@ -32,7 +31,7 @@ typedef struct FR {
 
 #define fr_init(res_arr_len, ...)\
 	(FR){\
-		.results = memset( &(unsigned int[ res_arr_len ]){0}, EMPTY_RESULT, res_arr_len),\
+		.results = (unsigned int[ res_arr_len * ARRAY_SIZE( ( (void*[]){__VA_ARGS__} ) ) ]){0},\
 		.res_len = res_arr_len,\
 		.hit_begin = 0,\
 		.hit_end = 180,\

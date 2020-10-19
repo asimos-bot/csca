@@ -89,14 +89,14 @@ void fr_monitor_raw(FR* fr){
 		for( unsigned int j=0; j < fr->len; j++ ){
 			
 			unsigned int time = fr_probe(fr->addrs[j]);
-			sched_yield();
 
-			if( fr->hit_begin <= time && time <= fr->hit_end && ( !i || fr->results[i-1] != j ) ){
+			if( fr->hit_begin <= time && time <= fr->hit_end ){
 
-				fr->results[i] = j;
-				i++;
-				break;
-			}		
+				printf("%u", j);
+				fflush(stdout);
+				//fr->results[i * fr->len + j] = 1;
+				//i++;
+			}
 		}
 	}
 }
