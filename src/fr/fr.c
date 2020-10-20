@@ -84,18 +84,16 @@ void fr_monitor_raw(FR* fr){
 	// flush everything to avoid false hits in first round
 	for(unsigned int i=0; i < fr->len; i++) force_flush(fr->addrs[i]);
 
-	for(unsigned int i=0; i < fr->res_len;){
+	for(unsigned int i=0; i < fr->num_time_slots; i++){
 
 		for( unsigned int j=0; j < fr->len; j++ ){
 			
 			unsigned int time = fr_probe(fr->addrs[j]);
+			sched_yield();
 
 			if( fr->hit_begin <= time && time <= fr->hit_end ){
 
-				printf("%u", j);
-				fflush(stdout);
-				//fr->results[i * fr->len + j] = 1;
-				//i++;
+				fr->results[i * fr->len + j] = 1;
 			}
 		}
 	}

@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <string.h>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -18,7 +17,7 @@
 typedef struct FR {
 
 	unsigned int* results;
-	unsigned int res_len;
+	unsigned int num_time_slots;
 
 	// timestamp to detect hit range
 	unsigned int hit_begin;
@@ -29,10 +28,10 @@ typedef struct FR {
 	void** addrs;
 } FR;
 
-#define fr_init(res_arr_len, ...)\
+#define fr_init(num_slots, ...)\
 	(FR){\
-		.results = (unsigned int[ res_arr_len * ARRAY_SIZE( ( (void*[]){__VA_ARGS__} ) ) ]){0},\
-		.res_len = res_arr_len,\
+		.results = (unsigned int[ num_slots * ARRAY_SIZE( ( (void*[]){__VA_ARGS__} ) ) ]){0},\
+		.num_time_slots = num_slots,\
 		.hit_begin = 0,\
 		.hit_end = 180,\
 		.len = ARRAY_SIZE( ( (void*[]){__VA_ARGS__} ) ),\
