@@ -5,7 +5,7 @@ import mplcursors
 
 class Plotter():
 
-    def __init__(self, filename: str):
+    def __init__(self, filename):
 
         self.filename = filename
 
@@ -76,15 +76,10 @@ class Plotter():
 
         return l
 
-    def plot_keyfields(self, x_axis_field, list_of_keywords, ylabel='probe percentage', xlabel='timestamp'):
+    def plot_keyfields(self, list_of_keywords, ylabel='probe percentage', xlabel='timestamp'):
 
-        if( isinstance(x_axis_field, str) ):
-            l = self._get_field_lists(x_axis_field, list_of_keywords)
-        elif( isinstance(x_axis_field, list) ):
-            l = self._get_field_lists_from_x_list(x_axis_field, list_of_keywords)
-            x_axis_field = "x_axis_field"
-        else:
-            raise ResourceWarning("x_axis_field has to a string or a list")
+        x_axis_field = self.reader.fieldnames[0]
+        l = self._get_field_lists(x_axis_field, list_of_keywords)
 
         fields = self._filter_headers(list_of_keywords)
 
@@ -108,6 +103,6 @@ if( __name__ == "__main__" ):
 
     import sys
     if( len(sys.argv) > 1 ):
-        Plotter(sys.argv[1]).plot_keyfields('timestamp', [''])
+        Plotter(sys.argv[1]).plot_keyfields([''])
     else:
-        print("usage: plotter.py <path/to/log>")
+        print("usage: plotter.py <path/to/csv>")

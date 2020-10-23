@@ -81,9 +81,6 @@ void load_elf(mmap_info* mi, const char* filename){
 
 void fr_monitor_raw(FR* fr){
 
-	// flush everything to avoid false hits in first round
-	for(unsigned int i=0; i < fr->len; i++) force_flush(fr->addrs[i]);
-
 	for(unsigned int i=0; i < fr->num_time_slots; i++){
 
 		for( unsigned int j=0; j < fr->len; j++ ){
