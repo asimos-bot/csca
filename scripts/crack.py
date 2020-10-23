@@ -55,21 +55,16 @@ class GPGCracker():
 
         slot = self.sequence[idx]
         previous = self.sequence[idx-1]
-        next = self.sequence[idx+1]
 
         if( slot.square ):
 
             if( slot.reduce ):
 
                 if( slot.multiply and not previous.multiply ):
-                    self.bits.append(1)
-                    return 0
-
-                if( not next.square ):
-                    self.bits.append(0)
-                    return 0
+                    return 3
 
                 return 2
+
             return 1
         return 0
 
@@ -77,18 +72,14 @@ class GPGCracker():
 
         slot = self.sequence[idx]
         previous = self.sequence[idx-1]
-        next_slot = self.sequence[idx+1]
 
         if( slot.reduce ):
 
-            if( slot.multiply and not previous.multiply ):
-                self.bits.append(1)
-                return 0
+            if( slot.multiply ):
+                return 3
 
-            elif( not slot.square and next_slot.square):
-                self.bits.append(0)
-                return 0
             return 2
+
         return 1
 
     def potential_2(self, idx):
@@ -99,13 +90,12 @@ class GPGCracker():
         if( slot.multiply ):
 
             if( slot.reduce ):
-
                 self.bits.append(1)
                 return 0
 
             return 3
 
-        elif( slot.square and not previous.square):
+        elif( slot.square and not previous.square ):
 
             self.bits.append(0)
             return 1
@@ -140,21 +130,17 @@ class GPGCracker():
             3: self.potential_3,
         }
 
-        for slot_idx in range(len(self.sequence)):
+        for slot_idx in range(len(self.sequence)-1):
 
-            # don't allow more than one empty slot in a sequence
-            # of a potential bit
-            if( not self.sequence[slot_idx] ):
-
-                recent_empty_slots+=1
-
-                if( recent_empty_slots == 2 ):
-                    recent_empty_slots = potential_bit_size = 0
-                    continue
-
-            elif( slot_idx != len(self.sequence) - 1 ):
+            if( not self.sequence[slot_idx].empty ):
 
                 potential_bit_size = bit_ops[potential_bit_size](slot_idx)
+            else:
+                if( potential_bit_size == 2 ):
+                    self.bits.append(0)
+                elif( potential_bit_size == 3 ):
+                    self.bits.append(1)
+                potential_bit_size = 0
 
         return self.bits
 
@@ -168,7 +154,6 @@ if( __name__ == "__main__" ):
         print(cracker.sequence)
         bits = cracker.translate_sequence()
         print(bits)
-
         print(len(bits))
         print(bits.count(1)/len(bits))
         print(bits.count(0)/len(bits))
