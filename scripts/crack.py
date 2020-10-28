@@ -78,10 +78,6 @@ class GPGCracker():
 
         d = dict()
 
-        d['bit_1'] = self.bits.count(1)/len(self.bits)
-
-        d['bit_no_repetition_1'] = self.bits_no_repetition.count(1)/len(self.bits_no_repetition)
-
         m = min(len(self.bits), len(self.bits_no_repetition))
         d['hamming_distance'] = sum( [ self.bits[i] != self.bits_no_repetition[i] for i in range(m) ] )
         d['levensthein'] = self.levensthein(self.bits, self.bits_no_repetition)

@@ -55,7 +55,7 @@ class Plotter():
             i+=1
         return l
 
-    def plot_keyfields(self, list_of_keywords, ylabel='probe percentage', xlabel='timestamp'):
+    def plot_keyfields(self, list_of_keywords, ylabel='quantity', xlabel='row'):
 
         l = self._get_field_lists(list_of_keywords)
 
@@ -68,7 +68,7 @@ class Plotter():
 
         for field in [ key for key in l.keys() if key != "x_axis_field" ]:
 
-            plt.plot(l["x_axis_field"], l[field], label = field)
+            plt.scatter(l["x_axis_field"], l[field], label = field)
 
         mplcursors.cursor(hover=True)
 

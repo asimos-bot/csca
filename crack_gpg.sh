@@ -19,10 +19,10 @@ function get_statistics(){
 		exit
 	fi
 
-	scripts/crack.py spy.log | cut -f 2 -d ' ' | tr "\n" "," | grep -Eo "[\.[:alnum:]]*(,[\.[:alnum:]]*){3}" >> scripts/crack.log
+	scripts/crack.py spy.log | cut -f 2 -d ' ' | tr "\n" "," | grep -Eo "[\.[:alnum:]]+,[\.[:alnum:]]+" >> scripts/crack.log
 }
 
-echo "bit_1,bit_no_repetition_1,hamming_distance,levensthein" > scripts/crack.log
+echo "hamming_distance,levensthein" > scripts/crack.log
 
 for i in {1..10}
 do
