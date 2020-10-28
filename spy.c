@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
 
 	fr_monitor_elf(&fr, "gnupg-1.4.13/g10/gpg");
 
-	FILE* file = fopen("spy.log", "w");
+	FILE* file = fopen("spy.csv", "w");
 
 	// create csv
 	fprintf(file, "square,reduce,multiply\n");

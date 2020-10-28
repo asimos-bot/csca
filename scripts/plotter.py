@@ -103,6 +103,6 @@ if( __name__ == "__main__" ):
 
     import sys
     if( len(sys.argv) > 1 ):
-        Plotter(sys.argv[1]).plot_keyfields([''])
+        Plotter(sys.argv[1]).plot_keyfields(sys.argv[2:])
     else:
         print("usage: plotter.py <path/to/csv>")

@@ -79,6 +79,10 @@ class GPGCracker():
         d = dict()
 
         m = min(len(self.bits), len(self.bits_no_repetition))
+        d['bits_len'] = len(self.bits)
+        d['bits_no_repetition_len'] = len(self.bits_no_repetition)
+        d['bits'] = ''.join(map(lambda x: str(x), self.bits))
+        d['bits_no_repetition'] = ''.join(map(lambda x: str(x), self.bits_no_repetition))
         d['hamming_distance'] = sum( [ self.bits[i] != self.bits_no_repetition[i] for i in range(m) ] )
         d['levensthein'] = self.levensthein(self.bits, self.bits_no_repetition)
 
@@ -217,9 +221,14 @@ if( __name__ == "__main__" ):
         print("the csv file should have 'square', 'reduce' and 'multiply' fieldnames")
     else:
         cracker = GPGCracker(sys.argv[1])
-        bits  = cracker.bits
-        bits_no_repetition = cracker.bits_no_repetition
 
         d = cracker.get_statistics()
-        for k in sorted(d.keys()):
-            print(k, d[k])
+        fieldnames = sorted(d.keys())[::-1]
+        has_header = os.path.exists("scripts/bits.csv")
+
+        with open("scripts/bits.csv", "a") as file:
+
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            if( not has_header ): writer.writeheader()
+
+            writer.writerow(d)

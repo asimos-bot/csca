@@ -64,7 +64,7 @@ profile: $(OBJECTS) $(TESTS_OBJ)
 	$(COVERAGE_COMMAND)
 	$(MAKE) hist
 hist:
-	@source ./scripts/visualenv/bin/activate && python3 scripts/plotter.py scripts/calibration.csv && deactivate
+	@source ./scripts/visualenv/bin/activate && python3 scripts/plotter.py scripts/calibration.csv frequency && deactivate
 
 all: folders $(TARGET_FINAL)
 

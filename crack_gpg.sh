@@ -9,7 +9,7 @@ function get_statistics(){
 
 	wait $SPY_PID
 
-	grep ",1" spy.log >/dev/null
+	grep ",1" spy.csv >/dev/null
 	GREP_EXIT_CODE=$?
 	if [[ $GREP_EXIT_CODE -eq 0 ]];
 	then
@@ -19,12 +19,12 @@ function get_statistics(){
 		exit
 	fi
 
-	scripts/crack.py spy.log | cut -f 2 -d ' ' | tr "\n" "," | grep -Eo "[\.[:alnum:]]+,[\.[:alnum:]]+" >> scripts/crack.log
+	scripts/bits.py spy.csv
 }
 
-echo "hamming_distance,levensthein" > scripts/crack.log
+rm -f scripts/bits.csv
 
-for i in {1..10}
+for i in {1..100}
 do
 	get_statistics
 done
