@@ -5,3 +5,4 @@ testfiles/
 */visualenv/
 spy
 spy.log
+*/__pycache__/

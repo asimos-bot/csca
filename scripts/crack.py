@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import os
 import csv
 
 class TimeSlot():
@@ -13,6 +14,13 @@ class TimeSlot():
         self.multiply = self.cast_to_bool(row, 'multiply')
         self.reduce = self.cast_to_bool(row, 'reduce')
         self.empty = not self.square and not self.multiply and not self.reduce
+
+    def __eq__(self, other):
+
+        if( isinstance(other, TimeSlot) ):
+
+            return self.square == other.square and self.multiply == other.multiply and self.reduce == other.reduce
+        return False
 
     def __repr__(self):
 
@@ -28,11 +36,57 @@ class GPGCracker():
 
     def __init__(self, filename):
 
-        self.file = open(filename)
+        self.sequence = []
 
-        self.sequence = self.translate_csv()
+        self.bits, self.bits_no_repetition = self.get_bits(filename)
 
-        self.bits = []
+    def get_bits(self, filename):
+
+        with open(filename) as file:
+            self.sequence = self.translate_csv(file)
+
+        return self.translate_sequence(False), self.translate_sequence(True)
+
+    def levensthein(self, list1, list2):
+
+        matrix = [[0 for i in range(len(list2) + 1)] for i in range(len(list1) + 1)]
+
+        for x in range(len(list1) + 1):
+            matrix[x][0] = x
+
+        for y in range(len(list2) + 1):
+            matrix[0][y] = y
+
+        for x in range(1, len(list1) + 1):
+            for y in range(1, len(list2) + 1):
+                if list1[x - 1] == list2[y - 1]:
+                    matrix[x][y] = min(
+                        matrix[x - 1][y] + 1,
+                        matrix[x - 1][y - 1],
+                        matrix[x][y - 1] + 1
+                    )
+                else:
+                    matrix[x][y] = min(
+                        matrix[x - 1][y] + 1,
+                        matrix[x - 1][y - 1] + 1,
+                        matrix[x][y - 1] + 1
+                    )
+
+        return matrix[len(list1)][len(list2)]
+
+    def get_statistics(self):
+
+        d = dict()
+
+        d['bit_1'] = self.bits.count(1)/len(self.bits)
+
+        d['bit_no_repetition_1'] = self.bits_no_repetition.count(1)/len(self.bits_no_repetition)
+
+        m = min(len(self.bits), len(self.bits_no_repetition))
+        d['hamming_distance'] = sum( [ self.bits[i] != self.bits_no_repetition[i] for i in range(m) ] )
+        d['levensthein'] = self.levensthein(self.bits, self.bits_no_repetition)
+
+        return d
 
     def __del__(self):
 
@@ -40,85 +94,107 @@ class GPGCracker():
 
             self.file.close()
 
-    def translate_csv(self):
+    def translate_csv(self, file):
 
         # put operations in a vector
         self.sequence=[]
 
-        for row in csv.DictReader(self.file):
+        for row in csv.DictReader(file):
 
             self.sequence.append(TimeSlot(row))
 
         return self.sequence
 
-    def potential_0(self, idx):
+    def potential_0(self, seq, idx, bits):
 
-        slot = self.sequence[idx]
-        previous = self.sequence[idx-1]
+        slot = seq[idx]
+        previous = seq[idx-1]
 
         if( slot.square ):
 
             if( slot.reduce ):
 
                 if( slot.multiply and not previous.multiply ):
-                    return 3
+                    bits.append(1)
+                    return 0, bits
 
-                return 2
+                return 2, bits
 
-            return 1
-        return 0
+            return 1, bits
+        return 0, bits
 
-    def potential_1(self, idx):
+    def potential_1(self, seq, idx, bits):
 
-        slot = self.sequence[idx]
-        previous = self.sequence[idx-1]
+        slot = seq[idx]
+        previous = seq[idx-1]
 
         if( slot.reduce ):
 
             if( slot.multiply ):
-                return 3
 
-            return 2
+                bits.append(1)
+                if( slot.square and not previous.square ):
+                    return 1, bits
+                return 0, bits
 
-        return 1
+            return 2, bits
 
-    def potential_2(self, idx):
+        return 1, bits
 
-        slot = self.sequence[idx]
-        previous = self.sequence[idx-1]
+    def potential_2(self, seq, idx, bits):
 
-        if( slot.multiply ):
+        slot = seq[idx]
+        previous = seq[idx-1]
+
+        if( slot.multiply and not previous.multiply):
 
             if( slot.reduce ):
-                self.bits.append(1)
-                return 0
+                bits.append(1)
+                return 0, bits
 
-            return 3
+            return 3, bits
 
-        elif( slot.square and not previous.square ):
+        elif( slot.square ):
 
-            self.bits.append(0)
-            return 1
+             if( not previous.square or ( previous.reduce and not slot.reduce ) ):
+                bits.append(0)
+                if( slot.reduce ):
+                    return 2, bits
+                return 1, bits
 
-        return 2
+        return 2, bits
 
-    def potential_3(self, idx):
+    def potential_3(self, seq, idx, bits):
 
-        slot = self.sequence[idx]
+        slot = seq[idx]
+        previous = seq[idx-1]
 
         if( slot.reduce ):
 
-            self.bits.append(1)
+            bits.append(1)
 
-            if( slot.square ):
+            if( slot.square and not previous.square ):
 
-                return 1
-            return 0
-        return 3
+                return 1, bits
+            return 0, bits
+        return 3, bits
 
-    def translate_sequence(self):
+    def filter_translation_sequence(self, ignore_adjacent):
 
-        self.bits=[]
+        seq = [ i for i in self.sequence ]
+
+        for i in range(len(seq)-1, 0, -1):
+
+            if( seq[i].empty ):
+                del seq[i]
+            elif( ignore_adjacent and seq[i] == seq[i-1] ):
+                del seq[i]
+
+        return seq
+
+    def translate_sequence(self, ignore_adjacent=False):
+
+        bits=[]
         potential_bit_size=0
         recent_empty_slots=0
 
@@ -130,19 +206,13 @@ class GPGCracker():
             3: self.potential_3,
         }
 
-        for slot_idx in range(len(self.sequence)-1):
+        seq = self.filter_translation_sequence(ignore_adjacent)
 
-            if( not self.sequence[slot_idx].empty ):
+        for slot_idx in range(1, len(seq)-1):
 
-                potential_bit_size = bit_ops[potential_bit_size](slot_idx)
-            else:
-                if( potential_bit_size == 2 ):
-                    self.bits.append(0)
-                elif( potential_bit_size == 3 ):
-                    self.bits.append(1)
-                potential_bit_size = 0
+            potential_bit_size, bits = bit_ops[potential_bit_size](seq, slot_idx, bits)
 
-        return self.bits
+        return bits
 
 if( __name__ == "__main__" ):
 
@@ -151,9 +221,9 @@ if( __name__ == "__main__" ):
         print("the csv file should have 'square', 'reduce' and 'multiply' fieldnames")
     else:
         cracker = GPGCracker(sys.argv[1])
-        print(cracker.sequence)
-        bits = cracker.translate_sequence()
-        print(bits)
-        print(len(bits))
-        print(bits.count(1)/len(bits))
-        print(bits.count(0)/len(bits))
+        bits  = cracker.bits
+        bits_no_repetition = cracker.bits_no_repetition
+
+        d = cracker.get_statistics()
+        for k in sorted(d.keys()):
+            print(k, d[k])
