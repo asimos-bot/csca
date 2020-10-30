@@ -2,10 +2,11 @@
 
 function get_statistics(){
 
+	rm -f scripts/hello.txt.gpg
 	./spy &
 	SPY_PID=$!
 
-	gnupg-1.4.13/g10/gpg --passphrase "Test Key" --armor -q -d scripts/hello.txt.gpg
+	gnupg-1.4.13/g10/gpg -q --sign scripts/hello.txt
 
 	wait $SPY_PID
 
@@ -24,7 +25,7 @@ function get_statistics(){
 
 rm -f scripts/bits.csv
 
-for i in {1..100}
+for i in {1..5}
 do
 	get_statistics
 done

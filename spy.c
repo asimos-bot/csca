@@ -2,7 +2,7 @@
 
 //0xbb9e5 first cache line
 //0xbba00 second cache line
-#define RSA_SQUARE (void*) 0xbb9e5
+#define RSA_SQUARE (void*) 0xbba00
 
 //0xbaf9f first cache line
 //0xbafc0 second cache line (only this one appears to work)
@@ -10,7 +10,7 @@
 
 //0xbb367 first cache line
 //0xbb380 second cache line
-#define RSA_MULTIPLY (void*) 0xbb367 
+#define RSA_MULTIPLY (void*) 0xbb380
 
 #define RSA_SQUARE_IDX 0
 #define RSA_REDUCE_IDX 1

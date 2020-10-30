@@ -65,6 +65,8 @@ profile: $(OBJECTS) $(TESTS_OBJ)
 	$(MAKE) hist
 hist:
 	@source ./scripts/visualenv/bin/activate && python3 scripts/plotter.py scripts/calibration.csv frequency && deactivate
+bits:
+	@source ./scripts/visualenv/bin/activate && python3 scripts/scatter_plotter.py scripts/bits.csv len levensthein hamming correctness && deactivate
 
 all: folders $(TARGET_FINAL)
 

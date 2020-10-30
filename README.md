@@ -27,6 +27,9 @@ RSA square: 0xbb9e5 offset (second cache line: 0xbba00)
 RSA reduce: 0xbaf9f offset (second cache line: 0xbafc0)
 RSA multiplication: 0xbb367 offset (second cache line: 0xbb380)
 
+NOTE: use a gpg secret key with no password, this way the RSA factors
+are not encrypted and you can check them with `pgpdump`
+
 ### Next Steps
 
 * Comparison between: analysis ignoring repetitive adjacent iterations, analysis computing every non-empty
