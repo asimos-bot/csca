@@ -74,27 +74,39 @@ class GPGCracker():
 
         return matrix[len(list1)][len(list2)]
 
-    def get_dq_correctness(self, bits):
+    def get_dq(self, bits):
 
         q=0xefc8623bb22fe5d1b7e7a1f9e059738450dd6243a29d5911252efdc7153abbb7e3cd1a81510e776ee15bdcee672112963cc6b44441e4c4ed93c8348314879cb6e9443141b10b46ba41fbbb6b31ab48f6025f3c8936fe2d3d44fa6430c484533afe00e9d7e719a8c8fd2d56e409050c25be41c934cf58f08a5234badf49c1c59f
         d=0x56a325fcdd434d3d9c1d1519271ad9ffcfbbb0cac2164ae67761293d8a2a743beb3619fe41a8dec22fcc7193acdd1898fb0b1194e41a8349dd8a38d27b25ee134921c449616013034766959c0c70772fe5e524e9d087441ab391b782b98f843199f78b5ad1e7605e647a73ea27c8591fbf7154d36a7af3470ca76424338b3dff63f8f36c54e12524a191d9b101db83b317fd2990c35f126bc359f0c3d1bc558c0d09310bad349ae7775326357d42bbbbcf022abd095bb5c1ddf4ee9f9fab0b8b034c540cfde1701be844e1a8efc6c1c522b0a1494ad68ac5ffafd11a177e4fd726eaf297ff18cf3da0fc486d6647114e632657a66464a3e49e8835b6d6649da9
 
         dq = d % (q-1)
 
-        dq = [int(x) for x in '{:0{size}b}'.format(dq,size=1024)]
+        return [int(x) for x in '{:0{size}b}'.format(dq,size=1024)]
 
-        return sum([ dq[i] == bits[i] for i in range(min(len(bits), len(dq))) ])
 
-    def get_dp_correctness(self, bits):
+    def get_dp(self, bits):
 
         p=0xe7009f96bb93846ed6b6d50202557fe8f2ac5598729493014344c8898404117848c3c213c025157053a347352685e9c7b59dd298ff36487825f91e15cecca407d56917c4059ab259a5e310458e8d47c43325b4e65808253da54a147fb74c1e927c8cc7d733194655ea2a49fce16a6e394bec52064c09ded872e6dd34ea3824f7
         d=0x56a325fcdd434d3d9c1d1519271ad9ffcfbbb0cac2164ae67761293d8a2a743beb3619fe41a8dec22fcc7193acdd1898fb0b1194e41a8349dd8a38d27b25ee134921c449616013034766959c0c70772fe5e524e9d087441ab391b782b98f843199f78b5ad1e7605e647a73ea27c8591fbf7154d36a7af3470ca76424338b3dff63f8f36c54e12524a191d9b101db83b317fd2990c35f126bc359f0c3d1bc558c0d09310bad349ae7775326357d42bbbbcf022abd095bb5c1ddf4ee9f9fab0b8b034c540cfde1701be844e1a8efc6c1c522b0a1494ad68ac5ffafd11a177e4fd726eaf297ff18cf3da0fc486d6647114e632657a66464a3e49e8835b6d6649da9
 
         dp = d % (p-1)
 
-        dp = [int(x) for x in '{:0{size}b}'.format(dp,size=1024)]
+        return [int(x) for x in '{:0{size}b}'.format(dp,size=1024)]
 
-        return sum([ dp[i] == bits[i] for i in range(min(len(bits), len(dp))) ])
+    def LCS(self, s1, s2):
+        #https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Longest_common_substring#Python
+        m = [[0] * (1 + len(s2)) for i in range(1 + len(s1))]
+        longest, x_longest = 0, 0
+        for x in range(1, 1 + len(s1)):
+            for y in range(1, 1 + len(s2)):
+                if s1[x - 1] == s2[y - 1]:
+                    m[x][y] = m[x - 1][y - 1] + 1
+                    if m[x][y] > longest:
+                        longest = m[x][y]
+                        x_longest = x
+                else:
+                    m[x][y] = 0
+        return s1[x_longest - longest: x_longest]
 
     def get_statistics(self):
 
@@ -103,13 +115,23 @@ class GPGCracker():
         m = min(len(self.bits), len(self.bits_no_repetition))
         d['bits_len'] = len(self.bits)
         d['bits_no_repetition_len'] = len(self.bits_no_repetition)
-        d['bits'] = ''.join(map(lambda x: str(x), self.bits))
-        d['bits_no_repetition'] = ''.join(map(lambda x: str(x), self.bits_no_repetition))
+        #d['bits'] = ''.join(map(lambda x: str(x), self.bits))
+        #d['bits_no_repetition'] = ''.join(map(lambda x: str(x), self.bits_no_repetition))
         d['hamming_distance'] = sum( [ self.bits[i] != self.bits_no_repetition[i] for i in range(m) ] )
         d['levensthein'] = self.levensthein(self.bits, self.bits_no_repetition)
 
-        d['correctness_dq'] = self.get_dq_correctness(self.bits[:1024])
-        d['correctness_dp'] = self.get_dp_correctness(self.bits[1024:])
+        factor_bits = self.bits_no_repetition
+
+        dp_bits = factor_bits[:1024]
+        dq_bits = factor_bits[1024:]
+
+        dp = self.get_dp(dp_bits)
+        dq = self.get_dq(dq_bits)
+
+        d['LCS_len_dp'] = len(self.LCS(dp, dp_bits))
+        d['LCS_len_dq'] = len(self.LCS(dq, dq_bits))
+        d['levensthein_dp'] = self.levensthein(dp, dp_bits)
+        d['levensthein_dq'] = self.levensthein(dq, dq_bits)
 
         return d
 
@@ -138,13 +160,11 @@ class GPGCracker():
         if( slot.square ):
 
             if( slot.reduce ):
-
-                if( slot.multiply and not previous.multiply ):
-                    bits.append(1)
-                    return 0, bits
-
                 return 2, bits
 
+                if( slot.multiply ):
+                    bits.append(1)
+                    return 0, bits
             return 1, bits
         return 0, bits
 
@@ -162,6 +182,9 @@ class GPGCracker():
                     return 1, bits
                 return 0, bits
 
+            if( slot.square and not previous.square ):
+                bits.append(0)
+                return 0, bits
             return 2, bits
 
         return 1, bits
