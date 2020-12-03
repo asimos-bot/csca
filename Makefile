@@ -21,7 +21,7 @@ TARGET := libcsca.so
 TEST_TARGET := runner
 
 # libraries (without -l)
-LIBS :=
+LIBS := gmp
 TEST_LIBS :=
 
 # compiler settings

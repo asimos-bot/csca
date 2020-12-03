@@ -1,6 +1,0 @@
-levensthein_dq,levensthein_dp,levensthein,hamming_distance,bits_no_repetition_len,bits_len,LCS_len_dq,LCS_len_dp
-676,323,0,0,2641,2641,19,22
-626,313,0,0,2603,2603,18,20
-571,326,0,0,2530,2530,21,19
-574,326,1,981,2483,2484,17,21
-700,315,0,0,2695,2695,19,21

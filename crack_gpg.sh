@@ -6,7 +6,7 @@ function get_statistics(){
 	./spy &
 	SPY_PID=$!
 
-	gnupg-1.4.13/g10/gpg -q --sign scripts/hello.txt
+	gnupg-1.4.13/g10/gpg --yes --sign scripts/hello.txt
 
 	wait $SPY_PID
 
@@ -25,7 +25,7 @@ function get_statistics(){
 
 rm -f scripts/bits.csv
 
-for i in {1..5}
+for i in {1..20}
 do
 	get_statistics
 done

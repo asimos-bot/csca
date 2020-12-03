@@ -2,7 +2,7 @@
 
 unsigned int fr_probe(void* addr){
 
-	unsigned int time=0;
+	volatile unsigned int time=0;
 
 	__asm__ volatile (
 		 "mfence\n"
@@ -14,7 +14,6 @@ unsigned int fr_probe(void* addr){
 		"mfence\n"
 		"lfence\n"
 		"rdtsc\n"
-		"lfence\n"
 		"subl %%esi, %%eax\n"
 		"clflush 0(%1)\n"
 		: "=a"(time)
@@ -44,7 +43,7 @@ void force_access(void* addr){
                         "lfence\n"
                         "movl (%0), %%eax\n"
                         "lfence\n"
-                        :
+			:                        
                         : "r"(addr)
                         : "eax"
                 );
@@ -84,9 +83,8 @@ void fr_monitor_raw(FR* fr){
 	for(unsigned int i=0; i < fr->num_time_slots; i++){
 
 		for( unsigned int j=0; j < fr->len; j++ ){
-			
+
 			unsigned int time = fr_probe(fr->addrs[j]);
-			sched_yield();
 
 			if( fr->hit_begin <= time && time <= fr->hit_end ){
 
@@ -119,20 +117,15 @@ unsigned int force_miss(void* addr){
 	return fr_probe(addr);
 }
 
-void hit_loop(double hist[][2], unsigned int n, void* addr){
+void sample_loop(double hist[][2], unsigned int n, void* addr){
 
 	for(; n > 0; n--){
 
 		unsigned int time = force_hit(addr);
 		if( time >= HIST_SIZE ) time = HIST_SIZE - 1;
 		hist[time][0]++;
-	}
-}
 
-void miss_loop(double hist[][2], unsigned int n, void* addr){
-
-	for(; n > 0; n--){
-		unsigned int time = force_miss(addr);
+		time = force_miss(addr);
 		if( time >= HIST_SIZE ) time = HIST_SIZE - 1;
 		hist[time][1]++;
 	}
@@ -230,8 +223,7 @@ void fr_calibrate(FR* fr, double sensibility, unsigned int num_samples, const ch
 	double hist[HIST_SIZE][2]={0};
 	void* test_addr = malloc(1);
 
-	hit_loop(hist, num_samples/2, test_addr);
-	miss_loop(hist, num_samples/2, test_addr);
+	sample_loop(hist, num_samples/2, test_addr);
 
 	free(test_addr);
 
