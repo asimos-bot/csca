@@ -6,7 +6,7 @@ function get_statistics(){
 	./spy &
 	SPY_PID=$!
 
-	gnupg-1.4.13/g10/gpg --yes --sign scripts/hello.txt
+	gnupg-1.4.13/g10/gpg --yes --local-user AFDE2AAC --sign scripts/hello.txt
 
 	wait $SPY_PID
 
