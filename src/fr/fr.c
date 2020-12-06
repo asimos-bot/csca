@@ -91,7 +91,6 @@ void fr_monitor_raw(FR* fr){
 				fr->results[i * fr->len + j] = 1;
 			}
 		}
-		sched_yield();
 	}
 }
 

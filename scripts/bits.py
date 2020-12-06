@@ -207,8 +207,6 @@ class GPGCracker():
 
             bits.append('1')
             if( slot.square and not previous.square ):
-                if( slot.reduce and not previous.reduce ):
-                    return 2, bits
                 return 1, bits
             return 0, bits
 
