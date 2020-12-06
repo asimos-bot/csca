@@ -58,15 +58,15 @@ class GPGCracker():
         self.dp = GPGCracker.d % (GPGCracker.p-1)
         self.dq = GPGCracker.d % (GPGCracker.q-1)
 
-        self.dp = [x for x in '{:0{size}b}'.format(self.dp,size=1024)]
-        self.dq = [x for x in '{:0{size}b}'.format(self.dq,size=1024)]
+        self.dp = [x for x in '{:0{size}b}'.format(self.dp,size=512)]
+        self.dq = [x for x in '{:0{size}b}'.format(self.dq,size=512)]
 
     def get_bits(self, filename):
 
         with open(filename) as file:
             self.sequence = self.translate_csv(file)
 
-        return self.translate_sequence(False), self.translate_sequence(True)
+        return self.translate_sequence(True), self.translate_sequence(True)
 
     def levensthein(self, list1, list2):
 
@@ -127,6 +127,9 @@ class GPGCracker():
         dp_bits = factor_bits[:512]
         dq_bits = factor_bits[512:]
 
+        print(''.join(map(str,dp_bits)))
+        print(''.join(self.dp))
+
         dp_LCS, dp_begin, dp_end = self.LCS(self.dp, dp_bits)
         dq_LCS, dq_begin, dq_end = self.LCS(self.dq, dq_bits)
         d['LCS_dp'] = ''.join(dp_LCS)
@@ -168,7 +171,7 @@ class GPGCracker():
                 return 2, bits
 
                 if( slot.multiply and not previous.multiply ):
-                    bits.append(1)
+                    bits.append('1')
                     return 0, bits
 
             return 1, bits
@@ -183,13 +186,13 @@ class GPGCracker():
 
             if( slot.multiply ):
 
-                bits.append(1)
+                bits.append('1')
                 if( slot.square and not previous.square ):
                     return 1, bits
                 return 0, bits
 
             if( slot.square and not previous.square ):
-                bits.append(0)
+                bits.append('0')
                 return 0, bits
             return 2, bits
 
@@ -202,19 +205,25 @@ class GPGCracker():
 
         if( slot.multiply and not previous.multiply):
 
-            if( slot.reduce ):
-                bits.append(1)
-                return 0, bits
-
-            return 3, bits
+            bits.append('1')
+            if( slot.square and not previous.square ):
+                if( slot.reduce and not previous.reduce ):
+                    return 2, bits
+                return 1, bits
+            return 0, bits
 
         elif( slot.square ):
 
              if( not previous.square or ( previous.reduce and not slot.reduce ) ):
-                bits.append(0)
+                bits.append('0')
                 if( slot.reduce ):
                     return 2, bits
                 return 1, bits
+
+        elif( slot.empty ):
+
+            bits.append('0')
+            return 1, bits
 
         return 2, bits
 
@@ -388,4 +397,4 @@ if( __name__ == "__main__" ):
 
             writer.writerow(d)
 
-        print(''.join(map(str, cracker.bits)))
+        #print(''.join(map(str, cracker.bits)))
