@@ -53,7 +53,7 @@ class GPGCracker():
 
         self.sequence = []
 
-        self.bits, self.bits_no_repetition = self.get_bits(filename)
+        self.bits = self.get_bits(filename)
 
         self.dp = GPGCracker.d % (GPGCracker.p-1)
         self.dq = GPGCracker.d % (GPGCracker.q-1)
@@ -66,7 +66,7 @@ class GPGCracker():
         with open(filename) as file:
             self.sequence = self.translate_csv(file)
 
-        return self.translate_sequence(True), self.translate_sequence(True)
+        return self.translate_sequence()
 
     def levensthein(self, list1, list2):
 
@@ -108,19 +108,17 @@ class GPGCracker():
                         x_longest = x
                 else:
                     m[x][y] = 0
-        return s1[x_longest - longest: x_longest], x_longest - longest, x_longest - 1
+        return s1[x_longest - longest: x_longest], x_longest - longest
 
     def get_statistics(self):
 
         d = dict()
 
-        m = min(len(self.bits), len(self.bits_no_repetition))
+        m = len(self.bits)
         d['bits_len'] = len(self.bits)
-        d['bits_no_repetition_len'] = len(self.bits_no_repetition)
         #d['bits'] = ''.join(map(lambda x: str(x), self.bits))
-        #d['bits_no_repetition'] = ''.join(map(lambda x: str(x), self.bits_no_repetition))
-        d['hamming_distance'] = sum( [ self.bits[i] != self.bits_no_repetition[i] for i in range(m) ] )
-        d['levensthein'] = self.levensthein(self.bits, self.bits_no_repetition)
+        #d['hamming_distance'] = sum( [ self.bits[i] != self.dp + self.dq for i in range(m) ] )
+        #d['levensthein'] = self.levensthein(self.bits, self.dp + self.dq)
 
         factor_bits = self.bits
 
@@ -130,16 +128,16 @@ class GPGCracker():
         print(''.join(map(str,dp_bits)))
         print(''.join(self.dp))
 
-        dp_LCS, dp_begin, dp_end = self.LCS(self.dp, dp_bits)
-        dq_LCS, dq_begin, dq_end = self.LCS(self.dq, dq_bits)
+        dp_LCS, dp_begin = self.LCS(self.dp, dp_bits)
+        dq_LCS, dq_begin = self.LCS(self.dq, dq_bits)
         d['LCS_dp'] = ''.join(dp_LCS)
         d['LCS_begin_dp'] = dp_begin
-        d['LCS_end_dp'] = dp_end
+        d['LCS_size_dp'] = len(dp_LCS)
+        d['correct_bits_dp'] = len([ 1 for a,b in zip(self.dp,dp_bits) if a==b])
         d['LCS_dq'] = ''.join(dq_LCS)
         d['LCS_begin_dq'] = dq_begin
-        d['LCS_end_dq'] = dq_end
-        d['levensthein_dp'] = self.levensthein(self.dp, dp_bits)
-        d['levensthein_dq'] = self.levensthein(self.dq, dq_bits)
+        d['LCS_size_dq'] = len(dq_LCS)
+        d['correct_bits_dq'] = len([ 1 for a,b in zip(self.dq,dq_bits) if a==b])
 
         return d
 
@@ -169,11 +167,6 @@ class GPGCracker():
 
             if( slot.reduce and not ( previous.square and previous.reduce ) ):
                 return 2, bits
-
-                if( slot.multiply and not previous.multiply ):
-                    bits.append('1')
-                    return 0, bits
-
             return 1, bits
         return 0, bits
 
@@ -240,7 +233,7 @@ class GPGCracker():
             return 0, bits
         return 3, bits
 
-    def filter_translation_sequence(self, ignore_adjacent):
+    def filter_translation_sequence(self):
 
         seq = [ i for i in self.sequence ]
 
@@ -248,12 +241,12 @@ class GPGCracker():
 
             if( seq[i].empty ):
                 del seq[i]
-            elif( ignore_adjacent and seq[i] == seq[i-1] ):
+            elif( seq[i] == seq[i-1] ):
                 del seq[i]
 
         return seq
 
-    def translate_sequence(self, ignore_adjacent=False):
+    def translate_sequence(self):
 
         bits=[]
         potential_bit_size=0
@@ -267,7 +260,7 @@ class GPGCracker():
             3: self.potential_3,
         }
 
-        seq = self.filter_translation_sequence(ignore_adjacent)
+        seq = self.filter_translation_sequence()
 
         for slot_idx in range(1, len(seq)-1):
 
