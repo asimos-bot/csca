@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function get_statistics(){
+function get_bits(){
 
 	rm -f scripts/hello.txt.gpg
 	./spy &
@@ -25,7 +25,9 @@ function get_statistics(){
 
 rm -f scripts/bits.csv
 
-for i in {1..20}
+for i in {1..21}
 do
-	get_statistics
+	get_bits
 done
+
+./scripts/stats.py scripts/bits.csv
